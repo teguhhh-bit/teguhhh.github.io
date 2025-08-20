@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Tabungan Web Rohman Teguh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .card {
+            backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(255, 255, 255, 0.75);
+            border-radius: 12px;
+            border: 1px solid rgba(209, 213, 219, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+        }
+        
+        .transaction-item {
+            transition: all 0.3s ease;
+        }
+        
+        .transaction-item:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Tabungan</h1>
+                <p class="text-gray-600">Kelola keuangan dengan lebih baik</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/a4e5cc0b-9726-4ff3-bddc-f3da13875601.png" alt="Profil pengguna dengan latar belakang biru" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow" />
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                </div>
+                <span class="font-medium text-gray-700">Rohman Teguh</span>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Saldo Tabungan -->
+            <div class="card p-6 lg:col-span-1">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-700">Saldo Tabungan</h2>
+                        <p class="text-sm text-gray-500">Total tabungan saat ini</p>
+                    </div>
+                    <div class="bg-blue-100 p-2 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-18c-1.11 0-2.08.402-2.599 1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="text-center py-4">
+                    <p class="text-4xl font-bold text-gray-800 mb-2">Rp <span id="saldo">0</span></p>
+                    <p class="text-sm text-gray-500"></p>
+                </div>
+                <div class="flex justify-between text-sm text-gray-600 mt-4">
+                    <div class="text-center">
+                        <p class="font-medium">Rp <span id="pemasukan">0</span></p>
+                        <p class="text-xs">Pemasukan</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="font-medium">Rp <span id="pengeluaran">0</span></p>
+                        <p class="text-xs">Pengeluaran</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grafik Tabungan -->
+            <div class="card p-6 lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-700">Perkembangan Tabungan</h2>
+                    <div class="flex space-x-2">
+                        <button class="px-3 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">Bulanan</button>
+                        <button class="px-3 py-1 text-xs text-gray-500 rounded-full hover:bg-gray-100"></button>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="tabunganChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Form Transaksi -->
+            <div class="card p-6 lg:col-span-1">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Tambah Transaksi</h2>
+                <form id="transaksiForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Transaksi</label>
+                        <div class="flex rounded-md shadow-sm">
+                            <button type="button" id="pemasukanBtn" class="flex-1 py-2 px-4 text-sm font-medium rounded-l-lg border border-gray-200 bg-blue-50 text-blue-600 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                                Pemasukan
+                            </button>
+                            <button type="button" id="pengeluaranBtn" class="flex-1 py-2 px-4 text-sm font-medium rounded-r-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                                Pengeluaran
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="jumlah" class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+                        <div class="relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">Rp</span>
+                            </div>
+                            <input type="number" id="jumlah" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-12 py-2 border-gray-300 rounded-md" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="kategori" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                        <select id="kategori" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option>Gaji</option>
+                            <option>Investasi</option>
+                            <option>Hadiah</option>
+                            <option>Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="deskripsi" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                        <textarea id="deskripsi" rows="2" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md"></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary w-full py-2 px-4 text-white rounded-md font-medium">
+                        Simpan Transaksi
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Riwayat Transaksi -->
+            <div class="card p-6 lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-700">Riwayat Transaksi</h2>
+                    <div class="relative">
+                        <input type="text" placeholder="Cari transaksi..." class="pl-8 pr-4 py-1 text-sm border border-gray-300 rounded-full focus:ring-blue-500 focus:border-blue-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-2.5 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    <div class="transaction-item flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-100">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-green-100 p-2 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Gaji Bulanan</p>
+                                <p class="text-xs text-gray-500">5 Juni 2023</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium text-green-600"></p>
+                            <p class="text-xs text-gray-500">Gaji</p>
+                        </div>
+                    </div>
+                    
+                    <div class="transaction-item flex items-center justify-between p-3 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-red-100 p-2 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Belanja Bulanan</p>
+                                <p class="text-xs text-gray-500">3 Juni 2023</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium text-red-600"></p>
+                            <p class="text-xs text-gray-500">Kebutuhan</p>
+                        </div>
+                    </div>
+                    
+                    <div class="transaction-item flex items-center justify-between p-3 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-green-100 p-2 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Dividen Saham</p>
+                                <p class="text-xs text-gray-500">1 Juni 2023</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium text-green-600"></p>
+                            <p class="text-xs text-gray-500">Investasi</p>
+                        </div>
+                    </div>
+                    
+                    <div class="transaction-item flex items-center justify-between p-3 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-red-100 p-2 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Makan di Luar</p>
+                                <p class="text-xs text-gray-500">30 Mei 2023</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium text-red-600"></p>
+                            <p class="text-xs text-gray-500">Makanan</p>
+                        </div>
+                    </div>
+                    
+                    <div class="transaction-item flex items-center justify-between p-3 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-green-100 p-2 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Bonus Proyek</p>
+                                <p class="text-xs text-gray-500">28 Mei 2023</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium text-green-600"></p>
+                            <p class="text-xs text-gray-500">Bonus</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating Action Button -->
+        <div class="fixed bottom-8 right-8">
+            <button id="fab" class="floating w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Inisialisasi Chart
+        const ctx = document.getElementById('tabunganChart').getContext('2d');
+        const tabunganChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                datasets: [{
+                    label: 'Saldo Tabungan',
+                    data: [3200000, 3500000, 3800000, 4000000, 4200000, 5250000, 0, 0, 0, 0, 0, 0],
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: 14,
+                            family: "'Poppins', sans-serif"
+                        },
+                        bodyFont: {
+                            size: 12,
+                            family: "'Poppins', sans-serif"
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return 'Rp ' + context.raw.toLocaleString('id-ID');
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rp ' + value.toLocaleString('id-ID');
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Logika Transaksi
+        let transaksiType = 'pemasukan';
+        
+        document.getElementById('pemasukanBtn').addEventListener('click', function() {
+            transaksiType = 'pemasukan';
+            this.classList.add('bg-blue-50', 'text-blue-600');
+            document.getElementById('pengeluaranBtn').classList.remove('bg-blue-50', 'text-blue-600');
+            document.getElementById('pengeluaranBtn').classList.add('bg-white', 'text-gray-700');
+        });
+        
+        document.getElementById('pengeluaranBtn').addEventListener('click', function() {
+            transaksiType = 'pengeluaran';
+            this.classList.add('bg-blue-50', 'text-blue-600');
+            document.getElementById('pemasukanBtn').classList.remove('bg-blue-50', 'text-blue-600');
+            document.getElementById('pemasukanBtn').classList.add('bg-white', 'text-gray-700');
+        });
+        
+        document.getElementById('transaksiForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const jumlah = parseFloat(document.getElementById('jumlah').value);
+            const kategori = document.getElementById('kategori').value;
+            const deskripsi = document.getElementById('deskripsi').value;
+            
+            if (isNaN(jumlah) || jumlah <= 0) {
+                alert('Masukkan jumlah yang valid');
+                return;
+            }
+            
+            // Update saldo
+            const saldoElement = document.getElementById('saldo');
+            let saldo = parseFloat(saldoElement.textContent.replace(/\./g, ''));
+            
+            if (transaksiType === 'pemasukan') {
+                saldo += jumlah;
+                
+                // Update pemasukan
+                const pemasukanElement = document.getElementById('pemasukan');
+                let pemasukan = parseFloat(pemasukanElement.textContent.replace(/\./g, ''));
+                pemasukan += jumlah;
+                pemasukanElement.textContent = pemasukan.toLocaleString('id-ID');
+            } else {
+                saldo -= jumlah;
+                
+                // Update pengeluaran
+                const pengeluaranElement = document.getElementById('pengeluaran');
+                let pengeluaran = parseFloat(pengeluaranElement.textContent.replace(/\./g, ''));
+                pengeluaran += jumlah;
+                pengeluaranElement.textContent = pengeluaran.toLocaleString('id-ID');
+            }
+            
+            saldoElement.textContent = saldo.toLocaleString('id-ID');
+            
+            // Tambahkan ke riwayat transaksi
+            const riwayatContainer = document.querySelector('.transaction-item').parentNode;
+            const newTransaction = document.createElement('div');
+            newTransaction.className = `transaction-item flex items-center justify-between p-3 rounded-lg ${transaksiType === 'pemasukan' ? 'bg-green-50 border border-green-100' : ''}`;
+            
+            const iconColor = transaksiType === 'pemasukan' ? 'green' : 'red';
+            
+            newTransaction.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="bg-${iconColor}-100 p-2 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-${iconColor}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${transaksiType === 'pemasukan' ? 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' : 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'}" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-800">${deskripsi || kategori}</p>
+                        <p class="text-xs text-gray-500">${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium text-${iconColor}-600">${transaksiType === 'pemasukan' ? '+' : '-'} Rp ${jumlah.toLocaleString('id-ID')}</p>
+                    <p class="text-xs text-gray-500">${kategori}</p>
+                </div>
+            `;
+            
+            riwayatContainer.insertBefore(newTransaction, riwayatContainer.firstChild);
+            
+            // Reset form
+            this.reset();
+            
+            // Animasi
+            newTransaction.style.opacity = '0';
+            newTransaction.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                newTransaction.style.transition = 'all 0.3s ease';
+                newTransaction.style.opacity = '1';
+                newTransaction.style.transform = 'translateY(0)';
+            }, 10);
+            
+            // Update chart
+            const currentMonth = new Date().getMonth();
+            tabunganChart.data.datasets[0].data[currentMonth] = saldo;
+            tabunganChart.update();
+        });
+        
+        // Floating Action Button
+        document.getElementById('fab').addEventListener('click', function() {
+            document.getElementById('transaksiForm').scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>
+
